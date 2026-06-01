@@ -3,267 +3,721 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heaven Peace - Inventory & Barcode Manager</title>
-    <!-- JsBarcode Library for Free Barcode Generation -->
+    <title>Heaven Peace - Inventory & Billing</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
         :root {
-            --primary: #1e293b;
-            --accent: #0f766e;
-            --light: #f8fafc;
-            --text: #0f172a;
+            --premium-black: #111111;
+            --luxury-gold: #c5a880;
+            --dark-gold: #aa8f66;
+            --light-bg: #fafafa;
+            --white: #ffffff;
+            --text-dark: #222222;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #e2e8f0; color: var(--text); padding: 15px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 15px; margin-bottom: 20px; }
-        h1 { color: var(--primary); font-size: 24px; }
-        .auth-btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        
-        .main-content { display: none; }
-        .active { display: block; }
-        
-        /* Form Styling */
-        .form-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: var(--light); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
-        input, select { padding: 10px; border: 1px solid #94a3b8; border-radius: 6px; font-size: 14px; width: 100%; }
-        button.add-btn { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button.add-btn:hover { background: #0d5e58; }
 
-        /* Actions Bar */
-        .actions-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn-sec { background: #64748b; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+        }
+
+        /* Header / Hero Section (Inspired by User Designs) */
+        header {
+            background: linear-gradient(135deg, #1c1c1c 0%, #0a0a0a 100%);
+            color: var(--white);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 3px solid var(--luxury-gold);
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--luxury-gold);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            color: #cccccc;
+            text-transform: uppercase;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid var(--luxury-gold);
+            color: var(--luxury-gold);
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--luxury-gold);
+            color: var(--premium-black);
+        }
+
+        /* Login Screen CSS */
+        #login-screen {
+            max-width: 400px;
+            margin: 100px auto;
+            background: var(--premium-black);
+            padding: 40px 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid var(--luxury-gold);
+        }
+
+        #login-screen h2 {
+            color: var(--luxury-gold);
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            font-weight: 400;
+        }
+
+        .pin-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2rem;
+            text-align: center;
+            border: 1px solid var(--luxury-gold);
+            background: #222;
+            color: var(--white);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, var(--luxury-gold) 0%, var(--dark-gold) 100%);
+            color: var(--premium-black);
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(197, 168, 128, 0.4);
+        }
+
+        /* Main Dashboard Layout */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--premium-black);
+            border-bottom: 3px solid var(--dark-gold);
+        }
+
+        .panel {
+            display: none;
+            background: var(--white);
+            padding: 25px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        /* Forms Layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
 
         /* Table Styling */
-        .table-wrapper { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        th, td { padding: 12px; border-bottom: 1px solid #cbd5e1; }
-        th { background-color: var(--primary); color: white; }
-        tr:hover { background-color: #f1f5f9; }
-        
-        /* Barcode Area */
-        .barcode-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .barcode-svg { max-width: 120px; height: auto; }
-        .print-btn { background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 4px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
 
-        /* Login Modal */
-        .login-box { max-width: 350px; margin: 100px auto; background: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .login-box h2 { margin-bottom: 20px; color: var(--primary); }
-        .login-box input { margin-bottom: 15px; text-align: center; }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
 
-        /* Print Specific Styles */
+        th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .delete-btn {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        /* Billing Custom Styles */
+        .billing-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .billing-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .bill-summary {
+            background: #fdfdfd;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 6px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .grand-total {
+            font-weight: bold;
+            font-size: 1.4rem;
+            color: var(--premium-black);
+            border-top: 2px dashed #ccc;
+            padding-top: 15px;
+        }
+
+        /* Barcode Area Styles */
+        .barcode-container {
+            text-align: center;
+            padding: 10px;
+            background: #fff;
+        }
+
+        .barcode-item {
+            display: inline-block;
+            margin: 15px;
+            padding: 15px;
+            border: 1px solid #eee;
+            background: white;
+            text-align: center;
+        }
+
+        /* Print Bill Styling Rules */
         @media print {
-            body * { visibility: hidden; }
-            .print-section, .print-section * { visibility: visible; }
-            .print-section { position: absolute; left: 0; top: 0; text-align: center; width: 100%; }
-            .print-btn { display: none; }
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN PAGE -->
-    <div id="login-page" class="login-box active">
-        <h2>Heaven Peace Login</h2>
-        <input type="password" id="pin-input" placeholder="Enter 4-Digit PIN" maxlength="4">
-        <button class="add-btn" style="width:100%" onclick="checkLogin()">Login</button>
+    <div id="login-screen">
+        <h1 style="color: var(--luxury-gold); font-size: 1.8rem; margin-bottom: 5px; letter-spacing: 2px;">HEAVEN PEACE</h1>
+        <p style="color: #888; font-size: 0.8rem; uppercase; letter-spacing: 1px; margin-bottom: 30px;">Inventory & POS System</p>
+        <h2>ENTER PIN</h2>
+        <input type="password" id="pin-input" class="pin-input" maxlength="4" placeholder="••••">
+        <button class="primary-btn" onclick="checkLogin()">Login</button>
     </div>
 
-    <!-- MAIN INTERFACE -->
-    <div id="main-interface" class="container main-content">
+    <div id="dashboard" style="display: none;">
         <header>
-            <h1>Heaven Peace Inventory & Barcode</h1>
-            <button class="auth-btn" onclick="logout()">Logout</button>
+            <h1 id="brand-title">HEAVEN PEACE</h1>
+            <p id="user-role-display">QUALITY YOU CAN TRUST</p>
+            <button class="logout-btn" onclick="logout()">Logout</button>
         </header>
 
-        <!-- Backup/Restore Buttons -->
-        <div class="actions-bar">
-            <button class="btn-sec" onclick="exportData()">📥 Backup Data</button>
-            <button class="btn-sec" onclick="document.getElementById('import-file').click()">📤 Restore Data</button>
-            <input type="file" id="import-file" style="display:none" onchange="importData(event)">
-        </div>
+        <div class="container">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('billing-tab', this)">BILLING (POS)</button>
+                <button class="tab-btn" onclick="switchTab('inventory-tab', this)">INVENTORY</button>
+                <button class="tab-btn" id="admin-only-tab-link" onclick="switchTab('add-product-tab', this)">ADD NEW PRODUCT</button>
+            </div>
 
-        <!-- Add Item Form -->
-        <div class="form-group">
-            <input type="text" id="item-name" placeholder="Product Name (e.g., Bubble Wrap)">
-            <input type="text" id="item-code" placeholder="Barcode Number/SKU (e.g., 1001)">
-            <input type="number" id="item-stock" placeholder="Stock Quantity">
-            <input type="number" id="item-price" placeholder="Price (₹)">
-            <button class="add-btn" onclick="addItem()">Add & Generate Barcode</button>
-        </div>
+            <div id="billing-tab" class="panel active">
+                <h2>Quick Invoice</h2>
+                <div style="margin: 20px 0;" class="no-print">
+                    <div class="form-group" style="max-width: 400px;">
+                        <label for="bill-search-barcode">Scan Barcode / Enter Barcode Number</label>
+                        <input type="text" id="bill-search-barcode" placeholder="Enter barcode & press Enter..." onkeypress="handleBillScan(event)">
+                    </div>
+                </div>
 
-        <!-- Inventory List -->
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Product Name</th>
-                        <th>Barcode Number</th>
-                        <th>Barcode Preview</th>
-                        <th>Stock</th>
-                        <th>Price</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="inventory-list">
-                    <!-- Dynamic Rows Go Here -->
-                </tbody>
-            </table>
+                <div class="billing-layout">
+                    <div>
+                        <h3>Current Items</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Total</th>
+                                    <th class="no-print">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bill-items-body">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <div class="bill-summary">
+                        <h3>Order Summary</h3>
+                        <div style="margin-top: 20px;">
+                            <div class="summary-row">
+                                <span>Total Items:</span>
+                                <span id="bill-total-count">0</span>
+                            </div>
+                            <div class="summary-row grand-total">
+                                <span>Grand Total:</span>
+                                <span>₹<span id="bill-grand-total">0.00</span></span>
+                            </div>
+                            <button class="primary-btn no-print" style="margin-top: 20px;" onclick="printInvoice()">Print & Complete Bill</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="inventory-tab" class="panel">
+                <h2>Current Stock Status</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Barcode</th>
+                            <th>Product Name</th>
+                            <th>Stock Quantity</th>
+                            <th>Price (₹)</th>
+                            <th>Visual Barcode</th>
+                            <th class="admin-action-header">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-table-body">
+                        </tbody>
+                </table>
+            </div>
+
+            <div id="add-product-tab" class="panel">
+                <h2>Register New Stock Entry</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="prod-name">Product Name / Description</label>
+                        <input type="text" id="prod-name" placeholder="e.g., 4x4x2 Box">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-barcode">Barcode Number (Unique ID)</label>
+                        <input type="text" id="prod-barcode" placeholder="e.g., HP1001">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-stock">Initial Stock Level</label>
+                        <input type="number" id="prod-stock" placeholder="e.g., 100">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-price">Unit Retail Price (₹)</label>
+                        <input type="number" id="prod-price" placeholder="e.g., 150">
+                    </div>
+                </div>
+                <button class="primary-btn" style="max-width: 250px;" onclick="addNewProduct()">Add & Save Item</button>
+            </div>
         </div>
     </div>
 
-    <!-- Hidden Print Area -->
-    <div id="print-area" class="print-section"></div>
+    <div id="print-area" style="display: none; padding: 30px; font-family: monospace;">
+        <center>
+            <h2>HEAVEN PEACE</h2>
+            <p>Quality You Can Trust</p>
+            <p>----------------------------------</p>
+            <h3>RETAIL INVOICE</h3>
+            <p>----------------------------------</p>
+        </center>
+        <div id="print-bill-details" style="margin: 20px 0;"></div>
+        <table style="width: 100%; font-size: 0.9rem;">
+            <thead>
+                <tr>
+                    <th style="background:none; border-bottom:1px dashed #000;">Item</th>
+                    <th style="background:none; border-bottom:1px dashed #000;">Qty</th>
+                    <th style="background:none; border-bottom:1px dashed #000; text-align:right;">Total</th>
+                </tr>
+            </thead>
+            <tbody id="print-table-body"></tbody>
+        </table>
+        <p style="text-align: right; margin-top: 15px; font-weight: bold; font-size: 1.1rem;">Grand Total: ₹<span id="print-grand-total">0.00</span></p>
+        <center>
+            <p style="margin-top: 30px;">Thank You For Shopping With Us!</p>
+            <p>Visit Again</p>
+        </center>
+    </div>
 
     <script>
-        let inventory = JSON.parse(localStorage.getItem('hp_inventory')) || [];
+        // App Configurations and State
+        let currentRole = 'employee'; 
+        let products = JSON.parse(localStorage.getItem('hp_inventory')) || [];
+        let currentBill = [];
 
+        // Check Access PIN Codes
         function checkLogin() {
             const pin = document.getElementById('pin-input').value;
-            if(pin === '1234') {
-                document.getElementById('login-page').classList.remove('active');
-                document.getElementById('main-interface').classList.add('active');
-                renderInventory();
+            if (pin === '1234') {
+                currentRole = 'admin';
+                initDashboard();
+            } else if (pin === '1111') {
+                currentRole = 'employee';
+                initDashboard();
             } else {
-                alert('Wrong PIN! Try again.');
+                alert('Incorrect System PIN. Please try again.');
                 document.getElementById('pin-input').value = '';
             }
         }
 
-        function logout() {
-            document.getElementById('main-interface').classList.remove('active');
-            document.getElementById('login-page').classList.add('active');
-            document.getElementById('pin-input').value = '';
+        // Initialize App View Permissions
+        function initDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+
+            if (currentRole === 'admin') {
+                document.getElementById('user-role-display').innerText = 'ADMIN DASHBOARD';
+                document.getElementById('admin-only-tab-link').style.display = 'block';
+                // Show actions columns
+                document.querySelectorAll('.admin-action-header').forEach(el => el.style.display = 'table-cell');
+            } else {
+                document.getElementById('user-role-display').innerText = 'EMPLOYEE POS MODE';
+                document.getElementById('admin-only-tab-link').style.display = 'none';
+                // Hide actions columns from employees
+                document.querySelectorAll('.admin-action-header').forEach(el => el.style.display = 'none');
+            }
+            renderInventoryTable();
+            renderBillTable();
         }
 
-        function addItem() {
-            const name = document.getElementById('item-name').value.trim();
-            let code = document.getElementById('item-code').value.trim();
-            const stock = document.getElementById('item-stock').value.trim();
-            const price = document.getElementById('item-price').value.trim();
+        function logout() {
+            document.getElementById('pin-input').value = '';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+            currentBill = [];
+        }
 
-            if(!name || !stock || !price) {
-                alert('Please fill Product Name, Stock, and Price!');
+        // Tab Switching Logic
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+            
+            if (tabId === 'inventory-tab') {
+                renderInventoryTable();
+            }
+        }
+
+        // Add Product Logic (Admin Control Only)
+        function addNewProduct() {
+            const name = document.getElementById('prod-name').value.trim();
+            const barcode = document.getElementById('prod-barcode').value.trim();
+            const stock = parseInt(document.getElementById('prod-stock').value);
+            const price = parseFloat(document.getElementById('prod-price').value);
+
+            if (!name || !barcode || isNaN(stock) || isNaN(price)) {
+                alert('Please fill out all product details correctly.');
                 return;
             }
 
-            // Auto-generate a numeric barcode if left empty
-            if(!code) {
-                code = Math.floor(100000 + Math.random() * 900000).toString();
+            // Check duplicate barcodes
+            if (products.some(p => p.barcode === barcode)) {
+                alert('This Barcode Number already exists in the system.');
+                return;
             }
 
-            const item = { id: Date.now().toString(), name, code, stock: parseInt(stock), price: parseFloat(price) };
-            inventory.push(item);
-            saveData();
-            renderInventory();
-
-            // Clear inputs
-            document.getElementById('item-name').value = '';
-            document.getElementById('item-code').value = '';
-            document.getElementById('item-stock').value = '';
-            document.getElementById('item-price').value = '';
+            products.push({ barcode, name, stock, price });
+            localStorage.setItem('hp_inventory', JSON.stringify(products));
+            
+            alert('Product Registered Successfully!');
+            // Reset fields
+            document.getElementById('prod-name').value = '';
+            document.getElementById('prod-barcode').value = '';
+            document.getElementById('prod-stock').value = '';
+            document.getElementById('prod-price').value = '';
         }
 
-        function deleteItem(id) {
-            if(confirm('Are you sure you want to delete this item?')) {
-                inventory = inventory.filter(item => item.id !== id);
-                saveData();
-                renderInventory();
+        // Delete Product Logic (Admin Control Only)
+        function deleteProduct(barcode) {
+            if (confirm('Are you sure you want to remove this product from inventory?')) {
+                products = products.filter(p => p.barcode !== barcode);
+                localStorage.setItem('hp_inventory', JSON.stringify(products));
+                renderInventoryTable();
             }
         }
 
-        function renderInventory() {
-            const list = document.getElementById('inventory-list');
-            list.innerHTML = '';
+        // Render Current Inventory Table View
+        function renderInventoryTable() {
+            const tbody = document.getElementById('inventory-table-body');
+            tbody.innerHTML = '';
 
-            inventory.forEach(item => {
+            products.forEach(p => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${item.name}</strong></td>
-                    <td>${item.code}</td>
-                    <td>
-                        <div class="barcode-container">
-                            <svg id="barcode-${item.id}" class="barcode-svg"></svg>
-                            <button class="print-btn" onclick="printSingleBarcode('${item.name}', '${item.code}')">🖨️ Print</button>
-                        </div>
-                    </td>
-                    <td>${item.stock}</td>
-                    <td>₹${item.price}</td>
-                    <td><button onclick="deleteItem('${item.id}')" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Delete</button></td>
+                    <td><strong>${p.barcode}</strong></td>
+                    <td>${p.name}</td>
+                    <td style="color: ${p.stock < 5 ? 'red' : 'inherit'}; font-weight: bold;">${p.stock} units</td>
+                    <td>₹${p.price.toFixed(2)}</td>
+                    <td class="barcode-container"><svg id="barcode-${p.barcode}"></svg></td>
+                    <td class="admin-action-cell">${currentRole === 'admin' ? `<button class="action-btn delete-btn" onclick="deleteProduct('${p.barcode}')">Delete</button>` : ''}</td>
                 `;
-                list.appendChild(tr);
-
-                // Generate the barcode inside the SVG
+                tbody.appendChild(tr);
+                
+                // Draw barcode image visual
                 try {
-                    JsBarcode(`#barcode-${item.id}`, item.code, {
+                    JsBarcode(`#barcode-${p.barcode}`, p.barcode, {
                         format: "CODE128",
-                        width: 2,
-                        height: 40,
+                        width: 1.5,
+                        height: 35,
                         displayValue: true,
-                        fontSize: 14
+                        fontSize: 10
                     });
-                } catch(e) {
-                    console.error("Barcode generation failed", e);
+                } catch(e) { console.error(e); }
+            });
+
+            // Adjust dynamically role columns view
+            if (currentRole !== 'admin') {
+                document.querySelectorAll('.admin-action-cell').forEach(el => el.style.display = 'none');
+            } else {
+                document.querySelectorAll('.admin-action-cell').forEach(el => el.style.display = 'table-cell');
+            }
+        }
+
+        // Handle Billing Barcode Scans / Inputs
+        function handleBillScan(event) {
+            if (event.key === 'Enter') {
+                const barcodeField = document.getElementById('bill-search-barcode');
+                const scannedBarcode = barcodeField.value.trim();
+                
+                if (!scannedBarcode) return;
+
+                // Search items database
+                const item = products.find(p => p.barcode === scannedBarcode);
+
+                if (!item) {
+                    alert('Item not found in Inventory system.');
+                    barcodeField.value = '';
+                    return;
                 }
-            });
-        }
 
-        function printSingleBarcode(name, code) {
-            const printArea = document.getElementById('print-area');
-            printArea.innerHTML = `
-                <div style="padding: 20px; display: inline-block; text-align: center;">
-                    <h3 style="margin-bottom: 5px; font-family: sans-serif; font-size: 16px;">${name}</h3>
-                    <svg id="print-svg"></svg>
-                </div>
-            `;
-            
-            JsBarcode("#print-svg", code, {
-                format: "CODE128",
-                width: 2.5,
-                height: 60,
-                displayValue: true,
-                fontSize: 16
-            });
+                if (item.stock <= 0) {
+                    alert('Warning: Product is Out of Stock!');
+                    barcodeField.value = '';
+                    return;
+                }
 
-            window.print();
-            printArea.innerHTML = '';
-        }
-
-        function saveData() {
-            localStorage.setItem('hp_inventory', JSON.stringify(inventory));
-        }
-
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(inventory));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `heaven-peace-backup-${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        inventory = imported;
-                        saveData();
-                        renderInventory();
-                        alert('Data Restored Successfully!');
-                    } else {
-                        alert('Invalid backup file.');
+                // Add to current billing array session
+                const existingBillItem = currentBill.find(b => b.barcode === scannedBarcode);
+                if (existingBillItem) {
+                    if (existingBillItem.qty >= item.stock) {
+                        alert('Cannot add more. Inventory limit reached.');
+                        barcodeField.value = '';
+                        return;
                     }
-                } catch (err) {
-                    alert('Error reading file.');
+                    existingBillItem.qty += 1;
+                } else {
+                    currentBill.push({
+                        barcode: item.barcode,
+                        name: item.name,
+                        price: item.price,
+                        qty: 1
+                    });
                 }
-            };
-            reader.readAsText(file);
+
+                barcodeField.value = '';
+                renderBillTable();
+            }
+        }
+
+        // Update billing table view
+        function updateBillQty(barcode, newQty) {
+            const billItem = currentBill.find(b => b.barcode === barcode);
+            const originalProduct = products.find(p => p.barcode === barcode);
+
+            if (newQty <= 0) {
+                removeBillItem(barcode);
+                return;
+            }
+
+            if (newQty > originalProduct.stock) {
+                alert(`Only ${originalProduct.stock} items available in stock.`);
+                renderBillTable();
+                return;
+            }
+
+            billItem.qty = parseInt(newQty);
+            renderBillTable();
+        }
+
+        function removeBillItem(barcode) {
+            currentBill = currentBill.filter(b => b.barcode !== barcode);
+            renderBillTable();
+        }
+
+        function renderBillTable() {
+            const tbody = document.getElementById('bill-items-body');
+            tbody.innerHTML = '';
+            
+            let totalCount = 0;
+            let grandTotal = 0;
+
+            currentBill.forEach(b => {
+                const rowTotal = b.price * b.qty;
+                totalCount += b.qty;
+                grandTotal += rowTotal;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${b.name}<br><small style="color:#777;">${b.barcode}</small></td>
+                    <td>₹${b.price.toFixed(2)}</td>
+                    <td><input type="number" value="${b.qty}" min="1" style="width:60px; padding:4px; text-align:center;" onchange="updateBillQty('${b.barcode}', this.value)"></td>
+                    <td>₹${rowTotal.toFixed(2)}</td>
+                    <td class="no-print"><button class="action-btn delete-btn" onclick="removeBillItem('${b.barcode}')">X</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('bill-total-count').innerText = totalCount;
+            document.getElementById('bill-grand-total').innerText = grandTotal.toFixed(2);
+        }
+
+        // Complete Order & Print System
+        function printInvoice() {
+            if (currentBill.length === 0) {
+                alert('The current bill invoice is empty.');
+                return;
+            }
+
+            // Deduct real inventory stock records
+            currentBill.forEach(b => {
+                const prod = products.find(p => p.barcode === b.barcode);
+                if (prod) {
+                    prod.stock -= b.qty;
+                }
+            });
+
+            // Save updated stock state
+            localStorage.setItem('hp_inventory', JSON.stringify(products));
+
+            // Prepare dynamic invoice print preview elements HTML
+            const printTbody = document.getElementById('print-table-body');
+            printTbody.innerHTML = '';
+            let total = 0;
+
+            currentBill.forEach(b => {
+                const rowTotal = b.price * b.qty;
+                total += rowTotal;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 5px 0;">${b.name}</td>
+                    <td style="padding: 5px 0; text-align:center;">${b.qty}</td>
+                    <td style="padding: 5px 0; text-align:right;">₹${rowTotal.toFixed(2)}</td>
+                `;
+                printTbody.appendChild(tr);
+            });
+
+            const now = new Date();
+            document.getElementById('print-bill-details').innerHTML = `
+                Date: ${now.toLocaleDateString()}<br>
+                Time: ${now.toLocaleTimeString()}<br>
+                Bill Type: POS Cash Transaction
+            `;
+            document.getElementById('print-grand-total').innerText = total.toFixed(2);
+
+            // Execute Window Print View Interface
+            window.print();
+
+            // Reset current bill session state
+            currentBill = [];
+            renderBillTable();
+            renderInventoryTable();
         }
     </script>
 </body>
 </html>
+
