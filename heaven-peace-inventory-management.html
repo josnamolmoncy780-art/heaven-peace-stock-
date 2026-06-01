@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ഇൻവെന്ററി & ബില്ലിംഗ് | ഹെവൻ പീസ്</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Times New Roman', Times, serif; margin: 0; background-color: #0d0d0d; color: #f2f2f2; }
+        .container { max-width: 1200px; margin: auto; padding: 20px; }
+        h2 { text-align: center; color: #cda434; font-size: 2.2em; text-transform: uppercase; margin-bottom: 20px; }
+
+        /* ഹെഡർ */
+        header { background-color: #000; padding: 15px 30px; border-bottom: 1px solid #cda434; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; color: #cda434; }
+        .logo i { font-size: 2em; margin-right: 10px; }
+        .logo h1 { font-size: 1.8em; margin: 0; }
+        .nav-icons i, .nav-icons span { font-size: 1.2em; color: #f2f2f2; margin-left: 20px; cursor: pointer; font-family: Arial, sans-serif; }
+        .nav-icons i:hover, .nav-icons span:hover { color: #cda434; }
+        .nav-menu { display: none; }
+        .show-menu { display: flex; align-items: center; }
+
+        /* ടാബുകൾ */
+        .tab-btn { background: none; border: 1px solid #cda434; color: #cda434; padding: 10px 20px; margin-right: 10px; cursor: pointer; font-weight: bold; }
+        .tab-btn.active-tab { background-color: #cda434; color: #0d0d0d; }
+
+        /* ലോഗിൻ ബോക്സ് */
+        .login-box { display: none; text-align: center; max-width: 400px; margin: 100px auto; background: #1a1a1a; padding: 40px; border-radius: 8px; border: 1px solid #cda434; }
+        .active-panel { display: block !important; }
+        input, button, select { padding: 12px; margin: 10px 0; width: 100%; box-sizing: border-box; font-size: 16px; border: 1px solid #cda434; }
+        input, select { background: #333; color: #f2f2f2; border-radius: 4px; }
+        button { background-color: #cda434; color: #0d0d0d; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        button:hover { background-color: #f2f2f2; color: #cda434; }
+
+        /* സെക്ഷനുകൾ */
+        .main-section { display: none; margin-top: 30px; }
+        .add-new-btn { width: auto; font-size: 1.1em; display: block; margin: 0 auto 20px; }
+
+        /* മോഡൽ വിൻഡോ */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
+        .modal-content { background-color: #1a1a1a; margin: 10% auto; padding: 20px; border: 1px solid #cda434; width: 80%; max-width: 500px; border-radius: 8px; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: #cda434; }
+
+        /* ടേബിൾ ഡിസൈൻ */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #1a1a1a; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
+        th { background-color: #333; color: #cda434; text-transform: uppercase; font-size: 0.9em; }
+        
+        /* ബില്ലിംഗ് ലേഔട്ട് */
+        .billing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .billing-grid { grid-template-columns: 1fr; } }
+        .bill-form { background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid #333; }
+        .total-display { font-size: 1.5em; color: #cda434; text-align: right; margin-top: 20px; font-weight: bold; }
+
+        /* പ്രിന്റ് ചെയ്യാനുള്ള ഇൻവോയ്സ് ഡിസൈൻ (കണ്ണുകൾക്ക് കുളിർമയുള്ള വൈറ്റ് ബാക്ക്ഗ്രൗണ്ട് പ്രിന്റിംഗിന് വേണ്ടി) */
+        #invoiceModal .modal-content { background-color: #fff; color: #000; border: none; max-width: 600px; padding: 30px; }
+        .invoice-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+        .invoice-header h2 { color: #000; margin: 0; font-size: 2em; }
+        .invoice-details { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 14px; }
+        .invoice-table { width: 100%; background: none; color: #000; margin-bottom: 20px; }
+        .invoice-table th { background: #f2f2f2; color: #000; border: 1px solid #ddd; }
+        .invoice-table td { color: #000; border: 1px solid #ddd; padding: 10px; }
+        
+        /* പ്രിന്റ് ചെയ്യുമ്പോൾ ബാക്കി കാര്യങ്ങൾ മറയ്ക്കാൻ */
+        @media print {
+            body * { visibility: hidden; }
+            #invoiceModal, #invoiceModal * { visibility: visible; }
+            #invoiceModal { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <i class="fas fa-crown"></i>
+            <h1>Heaven Peace</h1>
+        </div>
+        <div class="nav-icons">
+            <div id="menuItems" class="nav-menu">
+                <span onclick="switchTab('inventory')"><i class="fas fa-boxes"></i> സ്റ്റോക്ക്</span>
+                <span onclick="switchTab('billing')"><i class="fas fa-file-invoice-dollar"></i> ബില്ലിംഗ്</span>
+            </div>
+            <i class="fas fa-user-circle" id="loginIcon" onclick="toggleLoginBox()"></i>
+            <i class="fas fa-sign-out-alt" id="logoutIcon" onclick="logout()" style="display:none; color: #cda434;"></i>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="loginPage" class="login-box">
+            <h2>ലോഗിൻ</h2>
+            <input type="password" id="passwordInput" placeholder="രഹസ്യ പാസ്‌വേഡ് നൽകുക">
+            <button onclick="checkPassword()">ലോഗിൻ</button>
+            <p id="loginError" style="color:#cda434; text-align:center;"></p>
+        </div>
+
+        <div id="inventorySection" class="main-section">
+            <h2>ഇൻവെന്ററി മാനേജർ</h2>
+            <button class="add-new-btn" onclick="openModal('addModal')">പുതിയ സാധനം ചേർക്കുക</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>പേര്</th>
+                        <th>വില (Rs)</th>
+                        <th>സ്റ്റോക്ക് എണ്ണം</th>
+                        <th>മാറ്റങ്ങൾ</th>
+                    </tr>
+                </thead>
+                <tbody id="stockTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="billingSection" class="main-section">
+            <h2>ബില്ലിംഗ് കൗണ്ടർ</h2>
+            <div class="billing-grid">
+                <div class="bill-form">
+                    <h3>കസ്റ്റമർ വിവരങ്ങൾ</h3>
+                    <input type="text" id="custName" placeholder="കസ്റ്റമറുടെ പേര്">
+                    <input type="text" id="custPhone" placeholder="ഫോൺ നമ്പർ">
+                    
+                    <h3>സാധനങ്ങൾ തിരഞ്ഞെടുക്കുക</h3>
+                    <select id="billProductSelect" onchange="updateMaxQty()"></select>
+                    <input type="number" id="billQty" placeholder="എണ്ണം (Quantity)" min="1">
+                    <p id="availableWarn" style="color: #cda434; font-size: 14px; margin: 0;"></p>
+                    <button onclick="addToCart()">ബില്ലിലേക്ക് ചേർക്കുക</button>
+                </div>
+                <div>
+                    <h3>നിലവിലെ ബില്ല് ലിസ്റ്റ്</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>സാധനം</th>
+                                <th>വില</th>
+                                <th>എണ്ണം</th>
+                                <th>ആകെ</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartTableBody"></tbody>
+                    </table>
+                    <div class="total-display">ആകെ തുക: Rs <span id="billTotal">0</span></div>
+                    <button style="margin-top:20px; background-color:#28a745; color:white;" onclick="generateInvoice()">ബില്ല് ജനറേറ്റ് ചെയ്യുക</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addModal')">&times;</span>
+            <h3>പുതിയ പ്രൊഡക്റ്റ് വിവരങ്ങൾ</h3>
+            <input type="text" id="pName" placeholder="സാധനത്തിന്റെ പേര്">
+            <input type="number" id="pQty" placeholder="എണ്ണം (Quantity)">
+            <input type="number" id="pRate" placeholder="വില (Rate)">
+            <button onclick="addProduct()">ചേർക്കുക</button>
+        </div>
+    </div>
+
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content">
+            <span class="close no-print" onclick="closeModal('invoiceModal')">&times;</span>
+            <div class="invoice-header">
+                <h2>Heaven Peace</h2>
+                <p style="margin:5px 0; font-size:14px;">Premium Collections & Gifts</p>
+                <p style="margin:5px 0; font-size:14px;">Ph: +91 9876543210</p> </div>
+            <div class="invoice-details">
+                <div>
+                    <strong>ബില്ല് സ്വീകർത്താവ്:</strong>
+                    <div id="invCustName"></div>
+                    <div id="invCustPhone"></div>
+                </div>
+                <div style="text-align: right;">
+                    <strong>തിയതി:</strong> <span id="invDate"></span><br>
+                    <strong>ബില്ല് നമ്പർ:</strong> #HP-<span id="invNum"></span>
+                </div>
+            </div>
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th>ഇനം</th>
+                        <th>വില</th>
+                        <th>എണ്ണം</th>
+                        <th>ആകെ</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceTableBody"></tbody>
+            </table>
+            <div style="text-align: right; font-size: 1.3em; font-weight: bold; margin-top: 20px;">
+                Grand Total: Rs <span id="invTotal"></span>
+            </div>
+            <div style="text-align:center; margin-top:30px; font-size:12px; font-style:italic;" class="no-print">
+                സന്ദർശിച്ചതിന് നന്ദി! വീണ്ടും വരിക.
+            </div>
+            <button class="no-print" style="margin-top:20px;" onclick="window.print()">Print Invoice</button>
+        </div>
+    </div>
+
+<script>
+    const SECRET_PASSWORD = "1234";
+    let inventory = JSON.parse(localStorage.getItem('myInventory')) || [];
+    let cart = [];
+
+    function toggleLoginBox() {
+        document.getElementById('loginPage').classList.toggle('active-panel');
+    }
+
+    function checkPassword() {
+        const pass = document.getElementById('passwordInput').value;
+        if(pass === SECRET_PASSWORD) {
+            document.getElementById('loginPage').classList.remove('active-panel');
+            document.getElementById('menuItems').classList.add('show-menu');
+            document.getElementById('loginIcon').style.display = 'none';
+            document.getElementById('logoutIcon').style.display = 'inline-block';
+            switchTab('inventory');
+        } else {
+            document.getElementById('loginError').innerText = "തെറ്റായ പാസ്‌വേഡ്!";
+        }
+    }
+
+    function logout() {
+        location.reload(); // ലോഗൗട്ട് ചെയ്യുമ്പോൾ പേജ് റീഫ്രഷ് ചെയ്യുക സുരക്ഷയ്ക്കായി
+    }
+
+    function switchTab(tab) {
+        document.getElementById('inventorySection').classList.remove('active-panel');
+        document.getElementById('billingSection').classList.remove('active-panel');
+        
+        if(tab === 'inventory') {
+            document.getElementById('inventorySection').classList.add('active-panel');
+            displayInventory();
+        } else if(tab === 'billing') {
+            document.getElementById('billingSection').classList.add('active-panel');
+            populateProductSelect();
+            displayCart();
+        }
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = "block"; }
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+    /* ഇൻവെന്ററി ലോജിക് */
+    function addProduct() {
+        const name = document.getElementById('pName').value;
+        const qty = parseInt(document.getElementById('pQty').value);
+        const rate = parseFloat(document.getElementById('pRate').value);
+
+        if(name && qty >= 0 && rate >= 0) {
+            inventory.push({ name, qty, rate });
+            localStorage.setItem('myInventory', JSON.stringify(inventory));
+            displayInventory();
+            closeModal('addModal');
+            document.getElementById('pName').value = ''; document.getElementById('pQty').value = ''; document.getElementById('pRate').value = '';
+        } else { alert("വിവരങ്ങൾ കൃത്യമായി നൽകുക"); }
+    }
+
+    function updateQty(index, amount) {
+        inventory[index].qty += amount;
+        if(inventory[index].qty < 0) inventory[index].qty = 0;
+        localStorage.setItem('myInventory', JSON.stringify(inventory));
+        displayInventory();
+    }
+
+    function deleteProduct(index) {
+        if(confirm("ഈ ഉൽപ്പന്നം ഒഴിവാക്കണോ?")) {
+            inventory.splice(index, 1);
+            localStorage.setItem('myInventory', JSON.stringify(inventory));
+            displayInventory();
+        }
+    }
+
+    function displayInventory() {
+        const tbody = document.getElementById('stockTableBody');
+        tbody.innerHTML = '';
+        inventory.forEach((item, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.rate}</td>
+                    <td><strong>${item.qty}</strong></td>
+                    <td>
+                        <button style="width:auto; padding:5px 10px;" onclick="updateQty(${index}, 1)">+1</button>
+                        <button style="width:auto; padding:5px 10px; background-color:#333; color:#fff;" onclick="updateQty(${index}, -1)">-1</button>
+                        <button style="width:auto; padding:5px 10px; background-color:transparent; color:red; border:none;" onclick="deleteProduct(${index})"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    /* ബില്ലിംഗ് ലോജിക് */
+    function populateProductSelect() {
+        const select = document.getElementById('billProductSelect');
+        select.innerHTML = '<option value="">-- പ്രൊഡക്റ്റ് തിരഞ്ഞെടുക്കുക --</option>';
+        inventory.forEach((item, index) => {
+            if(item.qty > 0) {
+                select.innerHTML += `<option value="${index}">${item.name} (Available: ${item.qty})</option>`;
+            }
+        });
+        updateMaxQty();
+    }
+
+    function updateMaxQty() {
+        const index = document.getElementById('billProductSelect').value;
+        const warn = document.getElementById('availableWarn');
+        if(index !== "") {
+            warn.innerText = `നിലവിലുള്ള സ്റ്റോക്ക്: ${inventory[index].qty} എണ്ണം`;
+        } else { warn.innerText = ""; }
+    }
+
+    function addToCart() {
+        const select = document.getElementById('billProductSelect');
+        const index = select.value;
+        const qty = parseInt(document.getElementById('billQty').value);
+
+        if(index === "" || isNaN(qty) || qty <= 0) {
+            alert("ദയവായി ഉൽപ്പന്നവും കൃത്യമായ എണ്ണവും നൽകുക.");
+            return;
+        }
+
+        if(qty > inventory[index].qty) {
+            alert("ക്ഷമിക്കണം! ആവശ്യപ്പെട്ട അത്രയും സ്റ്റോക്ക് ലഭ്യമല്ല.");
+            return;
+        }
+
+        // കാർട്ടിൽ ഓൾറെഡി ഉണ്ടോ എന്ന് നോക്കുക
+        const existingIndex = cart.findIndex(item => item.invIndex == index);
+        if(existingIndex > -1) {
+            if((cart[existingIndex].qty + qty) > inventory[index].qty) {
+                alert("സ്റ്റോക്ക് പരിധിയേക്കാൾ കൂടുതൽ കാർട്ടിലേക്ക് ചേർക്കാൻ കഴിയില്ല.");
+                return;
+            }
+            cart[existingIndex].qty += qty;
+        } else {
+            cart.push({ invIndex: index, name: inventory[index].name, rate: inventory[index].rate, qty: qty });
+        }
+
+        document.getElementById('billQty').value = '';
+        displayCart();
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        displayCart();
+    }
+
+    function displayCart() {
+        const tbody = document.getElementById('cartTableBody');
+        tbody.innerHTML = '';
+        let total = 0;
+        cart.forEach((item, index) => {
+            let rowTotal = item.rate * item.qty;
+            total += rowTotal;
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.rate}</td>
+                    <td>${item.qty}</td>
+                    <td>${rowTotal}</td>
+                    <td><button style="background:none; border:none; color:red; padding:0;" onclick="removeFromCart(${index})"><i class="fas fa-times"></i></button></td>
+                </tr>`;
+        });
+        document.getElementById('billTotal').innerText = total;
+    }
+
+    function generateInvoice() {
+        if(cart.length === 0) {
+            alert("ബിൽ ലിസ്റ്റിൽ സാധനങ്ങൾ ഒന്നും തന്നെയില്ല!");
+            return;
+        }
+
+        // കസ്റ്റമർ ഡീറ്റെയിൽസ് സെറ്റ് ചെയ്യുക
+        document.getElementById('invCustName').innerText = document.getElementById('custName').value || "അജ്ഞാത കസ്റ്റമർ";
+        document.getElementById('invCustPhone').innerText = document.getElementById('custPhone').value || "---";
+        document.getElementById('invDate').innerText = new Date().toLocaleDateString('en-IN');
+        document.getElementById('invNum').innerText = Math.floor(1000 + Math.random() * 9000);
+
+        // ഇൻവോയ്സ് ടേബിൾ ഫിൽ ചെയ്യുക ഒപ്പം ഒറിജിനൽ ഇൻവെന്ററിയിൽ നിന്ന് സ്റ്റോക്ക് കുറയ്ക്കുക
+        const tbody = document.getElementById('invoiceTableBody');
+        tbody.innerHTML = '';
+        let grandTotal = 0;
+
+        cart.forEach(item => {
+            let rowTotal = item.rate * item.qty;
+            grandTotal += rowTotal;
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>Rs ${item.rate}</td>
+                    <td>${item.qty}</td>
+                    <td>Rs ${rowTotal}</td>
+                </tr>`;
+            
+            // ഒറിജിനൽ സ്റ്റോക്ക് കുറയ്ക്കുന്നു
+            inventory[item.invIndex].qty -= item.qty;
+        });
+
+        document.getElementById('invTotal').innerText = grandTotal;
+
+        // പുതിയ ഇൻവെന്ററി ഡാറ്റ ലോക്കൽ സ്റ്റോറേജിലേക്ക് മാറ്റുന്നു
+        localStorage.setItem('myInventory', JSON.stringify(inventory));
+
+        // ഇൻവോയ്സ് കാണിക്കുന്നു
+        openModal('invoiceModal');
+
+        // ബില്ലിംഗ് ഫോമുകൾ ക്ലിയർ ചെയ്യുന്നു
+        cart = [];
+        document.getElementById('custName').value = '';
+        document.getElementById('custPhone').value = '';
+        displayCart();
+        populateProductSelect();
+    }
+</script>
+</body>
+</html>
