@@ -2,68 +2,126 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Heaven Peace - Billing System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heaven Peace | Inventory & POS</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
-        /* നിങ്ങളുടെ പ്രീമിയം ലുക്ക് നിലനിർത്തിക്കൊണ്ടുള്ള സ്റ്റൈൽ */
-        .bill-summary { background: #fdfdfd; padding: 20px; border: 1px solid #ddd; }
-        .qr-section { margin-top: 20px; text-align: center; }
-        .qr-section img { width: 150px; }
+        :root { --premium-black: #111; --luxury-gold: #c5a880; --white: #fff; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; }
+        
+        #login-screen { max-width: 400px; margin: 100px auto; background: var(--premium-black); padding: 40px; color: var(--luxury-gold); text-align: center; border: 2px solid var(--luxury-gold); }
+        .pin-input { width: 80%; padding: 15px; font-size: 20px; text-align: center; background: #222; color: #fff; border: 1px solid var(--luxury-gold); margin: 20px 0; }
+        
+        #dashboard { display: none; padding: 20px; }
+        header { background: var(--premium-black); color: var(--luxury-gold); padding: 20px; text-align: center; border-bottom: 5px solid var(--luxury-gold); }
+        .panel { background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        #qr-section { display: none; text-align: center; padding: 20px; border: 2px dashed var(--luxury-gold); margin-top: 20px; }
+        #qr-img { max-width: 200px; display: block; margin: 10px auto; }
+        
+        button { background: var(--luxury-gold); color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
     </style>
 </head>
 <body>
 
-<!-- Billing Section -->
-<div id="billing-tab" class="panel active">
-    <h2>Quick Invoice</h2>
-    
-    <!-- Discount Input -->
-    <div class="form-group" style="margin: 15px 0;">
-        <label>Discount (%):</label>
-        <input type="number" id="bill-discount" value="0" oninput="renderBillTable()">
+    <div id="login-screen">
+        <h1>HEAVEN PEACE</h1>
+        <p>1234 (Admin) | 1111 (Employee)</p>
+        <input type="password" id="pin" class="pin-input" placeholder="Enter PIN">
+        <button onclick="login()">LOGIN</button>
     </div>
 
-    <!-- Billing Table -->
-    <table>
-        <thead>
-            <tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th></tr>
-        </thead>
-        <tbody id="bill-items-body"></tbody>
-    </table>
+    <div id="dashboard">
+        <header>
+            <h1>HEAVEN PEACE - POINT OF SALE</h1>
+            <button onclick="location.reload()">LOGOUT</button>
+        </header>
 
-    <div class="bill-summary">
-        <div class="summary-row"><span>Grand Total:</span> <span id="bill-grand-total">0.00</span></div>
-        <button onclick="printInvoice()">Print & Complete Bill</button>
+        <div class="panel">
+            <h3>BILLING SECTION</h3>
+            <input type="text" id="barcode-input" placeholder="Scan or Enter Barcode">
+            <button onclick="addToBill()">ADD TO CART</button>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>MRP</th>
+                        <th>Sale Price</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="bill-body"></tbody>
+            </table>
+
+            <div style="margin-top:20px;">
+                <h3>BILL SUMMARY</h3>
+                <p>Total MRP: Rs <span id="total-mrp">0</span></p>
+                <p style="color: green; font-weight: bold;">TOTAL SAVINGS: Rs <span id="total-savings">0</span></p>
+                <h2 style="color: var(--luxury-gold);">GRAND TOTAL: Rs <span id="grand-total">0</span></h2>
+            </div>
+            
+            <button onclick="showPayment()">COMPLETE BILL & PAY</button>
+        </div>
+
+        <div id="qr-section">
+            <h3>SCAN QR TO PAY</h3>
+            <img id="qr-img" src="https://drive.google.com/uc?id=1thintyHiWy8wGMQfmv4aAZOOJoI9uC-g" alt="Payment QR Code">
+            <p>Please scan this QR code for payment</p>
+            <button onclick="window.print()">PRINT RECEIPT</button>
+        </div>
     </div>
-</div>
 
-<!-- Print Area with QR Code -->
-<div id="print-area" style="display: none;">
-    <h2>HEAVEN PEACE</h2>
-    <div id="print-table-body"></div>
-    <p>Grand Total (after discount): ₹<span id="print-grand-total">0.00</span></p>
-    
-    <!-- QR Code Section -->
-    <div class="qr-section">
-        <p>Scan to Pay:</p>
-        <img src="https://i.ibb.co/YOUR_IMAGE_LINK/image.png" alt="UPI QR">
-        <p>UPI ID: josnamolmoncy1818@oksbi</p>
-    </div>
-</div>
+    <script>
+        // Default Product Database
+        let products = [{barcode: '101', name: 'Premium Box', mrp: 600, salePrice: 500}];
+        let cart = [];
 
-<script>
-    function renderBillTable() {
-        // നിലവിലെ ലോജിക്...
-        let discount = parseFloat(document.getElementById('bill-discount').value) || 0;
-        let total = /* കണക്കുകൂട്ടിയ തുക */;
-        let finalTotal = total - (total * (discount / 100));
-        document.getElementById('bill-grand-total').innerText = finalTotal.toFixed(2);
-    }
+        function login() {
+            const pin = document.getElementById('pin').value;
+            if(pin === '1234' || pin === '1111') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            } else { alert('Incorrect PIN!'); }
+        }
 
-    function printInvoice() {
-        document.getElementById('print-grand-total').innerText = document.getElementById('bill-grand-total').innerText;
-        window.print();
-    }
-</script>
+        function addToBill() {
+            const code = document.getElementById('barcode-input').value;
+            const item = products.find(p => p.barcode === code) || {barcode: '101', name: 'Premium Box', mrp: 600, salePrice: 500};
+            cart.push({...item, qty: 1});
+            renderCart();
+            document.getElementById('barcode-input').value = '';
+        }
 
+        function renderCart() {
+            let html = '';
+            let totalMrp = 0;
+            let grandTotal = 0;
+
+            cart.forEach(i => {
+                totalMrp += i.mrp;
+                grandTotal += i.salePrice;
+                html += `<tr>
+                    <td>${i.name}</td>
+                    <td><del>Rs ${i.mrp}</del></td>
+                    <td>Rs ${i.salePrice}</td>
+                    <td>1</td>
+                    <td>Rs ${i.salePrice}</td>
+                </tr>`;
+            });
+
+            document.getElementById('bill-body').innerHTML = html;
+            document.getElementById('total-mrp').innerText = totalMrp;
+            document.getElementById('grand-total').innerText = grandTotal;
+            document.getElementById('total-savings').innerText = totalMrp - grandTotal;
+        }
+
+        function showPayment() {
+            document.getElementById('qr-section').style.display = 'block';
+        }
+    </script>
 </body>
 </html>
